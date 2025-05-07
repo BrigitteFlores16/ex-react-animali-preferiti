@@ -8,35 +8,71 @@
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
     <script type="text/babel">
-        const animalsChoices = ["Cane", "Gatto", "Pappagallo", "Cavallo", "Panda"];
-    
-        function AnimalList() {
-            const [animals, setAnimals] = React.useState([]);
-    
-            function addAnimal() {
-                const randomAnimal = animalsChoices[Math.floor(Math.random() * animalsChoices.length)];
-                setAnimals([...animals, randomAnimal]);
-            }
-    
-            return (
-                <div>
-                    <details>
-                        <summary>Animali</summary>
-                        <ul>
-                            {animals.map((animal, index) => (
-                                <li key={index}>{animal}</li>
-                            ))}
-                        </ul>
-                    </details>
-                    <button onClick={addAnimal}>Aggiungi Animale</button>
-                </div>
-            );
-        }
-    
-        ReactDOM.render(<AnimalList />, document.querySelector(".lista-animali"));
-    </script>
-    </head>
+        const { useState } = React;
+     function Modal({ title, children, show = false, onClose = () => {}, onConfirm = () => {} }) {
+           return show && ReactDOM.createPortal(
+               <div className="modal-container">
+                   <div className="modal">
+                       <h2>{title}</h2>
+                       {children}
+                       <div className="modal-actions">
+                           <button onClick={onConfirm}>Conferma</button>
+                           <button onClick={onClose}>Annulla</button>
+                           
+                       </div>
+                   </div>
+               </div>,
+               document.body
+           );
+       }
+  
+      function AnimalList() {
+           const [animals, setAnimals] = React.useState([]);
+           const [showModal, setShowModal] = React.useState(false);
+           const [newAnimal, setNewAnimal] = React.useState("");
+   
+           function handleConfirm() {
+               if (newAnimal.trim()) {
+                   setAnimals([...animals, newAnimal]);
+               }
+               setShowModal(false);
+               setNewAnimal("");
+           }
+   
+           return (
+               <div>
+                   <Modal 
+                       title="Aggiungi un Animale"
+                       show={showModal}
+                       onClose={() => setShowModal(false)}
+                       onConfirm={handleConfirm}
+                   >
+                       <input 
+                           type="text" 
+                           value={newAnimal} 
+                           onChange={(e) => setNewAnimal(e.target.value)} 
+                           placeholder="Inserisci un animale..." 
+                       />
+                   </Modal>
+   
+                   <details>
+                       <summary>Animali</summary>
+                       <ul>
+                           {animals.map((animal, index) => (
+                               <li key={index}>{animal}</li>
+                           ))}
+                       </ul>
+                   </details>
+                   <button onClick={() => setShowModal(true)}>Aggiungi Animale</button>
+   
+               </div>
+           );
+       }
+    ReactDOM.render(<AnimalList />, document.querySelector(".lista-animali"));
+   </script>
+</head>
      <body>
     <header>
       <h1>I miei animali Preferiti</h1>

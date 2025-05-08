@@ -4,76 +4,110 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>I miei animali Preferiti</title>
-    <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link rel="stylesheet" href="style.css">
     
-    <script type="text/babel">
+     <script type="text/babel">
         const { useState } = React;
-     function Modal({ title, children, show = false, onClose = () => {}, onConfirm = () => {} }) {
-           return show && ReactDOM.createPortal(
-               <div className="modal-container">
-                   <div className="modal">
-                       <h2>{title}</h2>
-                       {children}
-                       <div className="modal-actions">
-                           <button onClick={onConfirm}>Conferma</button>
-                           <button onClick={onClose}>Annulla</button>
-                           
-                       </div>
-                   </div>
-               </div>,
-               document.body
-           );
-       }
-  
-      function AnimalList() {
-           const [animals, setAnimals] = React.useState([]);
-           const [showModal, setShowModal] = React.useState(false);
-           const [newAnimal, setNewAnimal] = React.useState("");
+
+    function Modal({ title, children, show = false, onClose = () => {}, onConfirm = () => {} }) {
+            return show && ReactDOM.createPortal(
+                <div className="modal-container">
+                    <div className="modal">
+                        <h2>{title}</h2>
+                        {children}
+                        <div className="modal-actions">
+                            <button onClick={onConfirm}>Conferma</button>
+                            <button onClick={onClose}>Annulla</button>
+                            
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            );
+        }
    
-           function handleConfirm() {
-               if (newAnimal.trim()) {
-                   setAnimals([...animals, newAnimal]);
-               }
-               setShowModal(false);
-               setNewAnimal("");
-           }
-   
-           return (
-               <div>
-                   <Modal 
-                       title="Aggiungi un Animale"
-                       show={showModal}
-                       onClose={() => setShowModal(false)}
-                       onConfirm={handleConfirm}
-                   >
-                       <input 
-                           type="text" 
-                           value={newAnimal} 
-                           onChange={(e) => setNewAnimal(e.target.value)} 
-                           placeholder="Inserisci un animale..." 
-                       />
-                   </Modal>
-   
-                   <details>
-                       <summary>Animali</summary>
-                       <ul>
-                           {animals.map((animal, index) => (
-                               <li key={index}>{animal}</li>
-                           ))}
-                       </ul>
-                   </details>
-                   <button onClick={() => setShowModal(true)}>Aggiungi Animale</button>
-   
-               </div>
-           );
-       }
-    ReactDOM.render(<AnimalList />, document.querySelector(".lista-animali"));
-   </script>
+       function AnimalList() {
+            const [animals, setAnimals] = React.useState([]);
+            const [showModal, setShowModal] = React.useState(false);
+            const [newAnimal, setNewAnimal] = React.useState("");
+            const [loading, setLoading] = useState(false);
+            const [error, setError] = useState(null);
+
+    
+            async function handleConfirm() {
+    if (!newAnimal.trim()) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+        const response = await fetch(`https://boolean-spec-frontend.vercel.app/freetestapi/animals?search=${newAnimal}`);
+        const data = await response.json();
+
+        if (data.length > 0) {
+            const firstAnimal = data[0];
+            setAnimals([...animals, {
+                name: firstAnimal.name,
+                description: firstAnimal.description || "Descrizione non disponibile",
+                image: firstAnimal.image || "https://via.placeholder.com/150"
+            }]);
+        } else {
+            setError("Nessun animale trovato.");
+        }
+    } catch (err) {
+        setError("Errore durante la ricerca dell'animale.");
+    }
+
+    setLoading(false);
+    setShowModal(false);
+    setNewAnimal("");
+}
+
+            return (
+                <div>
+                    <Modal 
+                        title="Aggiungi un Animale"
+                        show={showModal}
+                        onClose={() => setShowModal(false)}
+                        onConfirm={handleConfirm}
+                    >
+                        <input 
+                            type="text" 
+                            value={newAnimal} 
+                            onChange={(e) => setNewAnimal(e.target.value)} 
+                            placeholder="Inserisci un animale..." 
+                        />
+                    </Modal>
+            <details>
+           <summary>Animali</summary>  
+          {loading && <p>Caricamento...</p>}
+          {error && <p style={{ color: "red" }}>{error}</p>}
+         <ul>
+             {animals.map((animal, index) => (
+            typeof animal === "string" ? (
+        <li key={index}>{animal}</li>
+          ) : (
+        <li key={index}>
+            <h3>{animal.name}</h3>
+            <img src={animal.image} alt={animal.name} width="100" />
+            <p>{animal.description}</p>
+        </li>
+      )
+     ))}
+         </ul>
+           </details>
+           <button onClick={() => setShowModal(true)}>Aggiungi Animale</button>
+           </div>
+            );
+        }
+        const root = ReactDOM.createRoot(document.querySelector(".lista-animali"));
+        root.render(<AnimalList />);
+         </script>
 </head>
-     <body>
+<body>
     <header>
       <h1>I miei animali Preferiti</h1>
     </header>
@@ -88,3 +122,4 @@
     </footer>
   </body>
 </html>
+
